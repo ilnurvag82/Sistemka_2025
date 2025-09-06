@@ -1,0 +1,141 @@
+import java.util.Scanner;
+
+    public static void main(String[] args) {
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Введите первое число: ");
+        int a = scan.nextInt();
+        System.out.println("Введите второе число: ");
+        int b = scan.nextInt();
+
+        // По умолчанию вызываем быстрый метод крестьянского умножения.
+        int p = Multiplication(a, b);
+        System.out.println("Произведение: " + p);
+
+        // Для тестирования можно вызвать все методы и сравнить:
+        // System.out.println("forAdd: " + multByAdditionFor(a,b));
+        // System.out.println("minLoop: " + multByAdditionMinLoop(a,b));
+        // System.out.println("peasant: " + russianPeasant(a,b));
+        // System.out.println("bitAdd: " + bitwiseShiftAdd(a,b));
+        // System.out.println("recursive: " + multRecursive(a,b));
+        // System.out.println("logs: " + multUsingLogs(a,b));
+
+        scan.close();
+    }
+
+    static int Multiplication(int a, int b) {
+        return russianPeasant(a, b); // по умолчанию — O(log n)
+    }
+
+    //  1) Наивное через for (сложность O(n))
+    static int multByAdditionFor(int a, int b) {
+        if (a == 0 || b == 0) return 0;
+        boolean neg = (a < 0) ^ (b < 0);
+        long aa = Math.abs((long)a);
+        long bb = Math.abs((long)b);
+
+        long res = 0;
+        for (long i = 0; i < bb; i++) { // добавляем aa, bb раз
+            res += aa;
+        }
+        res = neg ? -res : res;
+        return (int)res;
+    }
+
+    //  2) Улучшенный цикл: идём по меньшему множителю (O(min(|a|,|b|)))
+    static int multByAdditionMinLoop(int a, int b) {
+        if (a == 0 || b == 0) return 0;
+        boolean neg = (a < 0) ^ (b < 0);
+        long aa = Math.abs((long)a);
+        long bb = Math.abs((long)b);
+
+        // перебираем по меньшему числу итераций
+        long small = Math.min(aa, bb);
+        long big = Math.max(aa, bb);
+
+        long res = 0;
+        for (long i = 0; i < small; i++) {
+            res += big;
+        }
+        res = neg ? -res : res;
+        return (int)res;
+    }
+
+    // 3) Крестья́нское умножение (Russian peasant), итеративно O(log n)
+    static int russianPeasant(int a, int b) {
+        if (a == 0 || b == 0) return 0;
+        boolean neg = (a < 0) ^ (b < 0);
+        long aa = Math.abs((long)a);
+        long bb = Math.abs((long)b);
+
+        long res = 0;
+        while (bb > 0) {
+            if ((bb & 1) == 1) { // если текущий младший бит = 1, прибавляем aa
+                res += aa;
+            }
+            aa <<= 1; // удваиваем aa
+            bb >>= 1; // делим bb на 2 (сдвиг вправо)
+        }
+        res = neg ? -res : res;
+        return (int)res;
+    }
+
+    //  4) Побитовое умножение: суммируем сдвинутые a для каждого бита b (O(log n))
+    static int bitwiseShiftAdd(int a, int b) {
+        if (a == 0 || b == 0) return 0;
+        boolean neg = (a < 0) ^ (b < 0);
+        long aa = Math.abs((long)a);
+        long bb = Math.abs((long)b);
+
+        long res = 0;
+        int shift = 0;
+        while (bb != 0) {
+            if ((bb & 1) != 0) {
+                res += (aa << shift);
+            }
+            bb >>>= 1;
+            shift++;
+        }
+        res = neg ? -res : res;
+        return (int)res;
+    }
+
+    //  5) Рекурсивный метод с делением на 2 (fast recursive), O(log n)
+    static int multRecursive(int a, int b) {
+        // обработка знака и нуля
+        if (a == 0 || b == 0) return 0;
+        boolean neg = (a < 0) ^ (b < 0);
+        long aa = Math.abs((long)a);
+        long bb = Math.abs((long)b);
+        long res = multRecHelper(aa, bb);
+        res = neg ? -res : res;
+        return (int)res;
+    }
+
+    private static long multRecHelper(long a, long b) {
+        if (b == 0) return 0;
+        if (b == 1) return a;
+        if ((b & 1) == 0) {
+            // если b чётно:  a * b = (a * 2) * (b / 2)
+            return multRecHelper(a << 1, b >> 1);
+        } else {
+            // если b нечётно: a*b = a + a*(b-1)
+            return a + multRecHelper(a, b - 1);
+        }
+    }
+
+    //  6) Через логарифмы и exp (O(1), приближенно, не идеально для больших целых)
+    static int multUsingLogs(int a, int b) {
+        if (a == 0 || b == 0) return 0;
+        boolean neg = (a < 0) ^ (b < 0);
+
+        double da = Math.abs((double)a);
+        double db = Math.abs((double)b);
+
+        // Предупреждение: численные ошибки и переполнение возможны
+        double sumLog = Math.log(da) + Math.log(db);
+        double val = Math.exp(sumLog);
+
+        long rounded = Math.round(val);
+        long res = neg ? -rounded : rounded;
+        return (int)res;
+    }
