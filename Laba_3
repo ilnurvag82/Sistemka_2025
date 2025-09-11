@@ -1,0 +1,73 @@
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+public class SimpleProcManager {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        List<Process> procs = new ArrayList<>();
+
+        System.out.println("Windows: запускаем notepad и calc...");
+
+        // Запуск Notepad и Calculator
+        tryStart(procs, "notepad");
+        tryStart(procs, "calc");
+
+        // Третий — ввод с экрана
+        System.out.print("Введите команду для третьего процесса (пример: notepad) и Enter: ");
+        String line = sc.nextLine().trim();
+        if (!line.isEmpty()) {
+            String[] cmd = line.split("\\s+");
+            tryStart(procs, cmd);
+        }
+
+        // Для каждого процесса: показать PID и спросить "Завершить д/н"
+        for (Process p : procs) {
+            long pid = p.toHandle().pid();
+            System.out.print("Процесс PID=" + pid + ". Завершить (д/н)? ");
+            String ans = sc.nextLine().trim().toLowerCase();
+            if (ans.equals("д") || ans.equals("да") || ans.equals("y")) {
+                terminate(p, pid);
+            } else {
+                System.out.println("Оставляем PID=" + pid);
+            }
+        }
+
+        sc.close();
+        System.out.println("Готово.");
+    }
+
+    private static void tryStart(List<Process> list, String cmd) {
+        tryStart(list, cmd.split("\\s+"));
+    }
+
+    private static void tryStart(List<Process> list, String[] cmd) {
+        try {
+            Process p = new ProcessBuilder(cmd).start();
+            System.out.println("Запущено: " + String.join(" ", cmd) + " PID=" + p.toHandle().pid());
+            list.add(p);
+        } catch (Exception e) {
+            System.out.println("Не удалось запустить '" + String.join(" ", cmd) + "': " + e.getMessage());
+        }
+    }
+
+    private static void terminate(Process p, long pid) {
+        try {
+            p.destroy(); // мягкое завершение
+            if (!p.waitFor(3, TimeUnit.SECONDS)) {
+                System.out.println("Не завершился за 3s — принудительное завершение...");
+                p.destroyForcibly();
+                p.waitFor(3, TimeUnit.SECONDS);
+            }
+            if (p.isAlive()) {
+                System.out.println("PID=" + pid + " всё ещё жив (не удалось).");
+            } else {
+                System.out.println("PID=" + pid + " завершён. Exit code=" + p.exitValue());
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            System.out.println("Операция прервана.");
+        } catch (Exception ex) {
+            System.out.println("Ошибка при завершении PID=" + pid + ": " + ex.getMessage());
+        }
+    }
+}
