@@ -1,0 +1,43 @@
+package org.example;
+
+import org.testng.annotations.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class MultiplicationUtilsTest {
+
+    public void assertAllMethodsEqual(int a, int b, int expected) {
+        assertEquals(expected, MultiplicationUtils.multByAdditionFor(a, b), "multByAdditionFor");
+        assertEquals(expected, MultiplicationUtils.multByAdditionMinLoop(a, b), "multByAdditionMinLoop");
+        assertEquals(expected, MultiplicationUtils.russianPeasant(a, b), "russianPeasant");
+        assertEquals(expected, MultiplicationUtils.bitwiseShiftAdd(a, b), "bitwiseShiftAdd");
+        assertEquals(expected, MultiplicationUtils.multRecursive(a, b), "multRecursive");
+        assertEquals(expected, MultiplicationUtils.multUsingLogs(a, b), "multUsingLogs");
+    }
+
+    @Test
+    public void testZeros() {
+        assertAllMethodsEqual(0, 0, 0);
+        assertAllMethodsEqual(0, 5, 0);
+        assertAllMethodsEqual(7, 0, 0);
+    }
+
+    @Test
+    public void testNegativeAndMixed() {
+        assertAllMethodsEqual(-3, 7, -21);
+        assertAllMethodsEqual(3, -7, -21);
+        assertAllMethodsEqual(-4, -6, 24);
+    }
+
+    @Test
+    public void testVarious() {
+        int[][] pairs = {
+                {5, 13}, {100, 0}, {1, 1000}, {999, 2}, {20, 20}
+        };
+        for (int[] p : pairs) {
+            int a = p[0], b = p[1];
+            int expected = a * b;
+            assertAllMethodsEqual(a, b, expected);
+        }
+    }
+}
