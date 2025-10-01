@@ -1,0 +1,35 @@
+public class SimpleThreadExample {
+    public static void main(String[] args) {
+        System.out.println("Основной поток начал работу");
+
+        // Создаем и запускаем 10 потоков
+        for (int i = 1; i <= 10; i++) {
+            MyThread thread = new MyThread(i);
+            thread.start();
+        }
+
+        System.out.println("Основной поток завершил работу");
+    }
+}
+
+class MyThread extends Thread {
+    private int threadNumber;
+
+    public MyThread(int threadNumber) {
+        this.threadNumber = threadNumber;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Поток " + threadNumber + " начал работу");
+
+        try {
+            // Имитация работы потока
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            System.out.println("Поток " + threadNumber + " был прерван");
+        }
+
+        System.out.println("Поток " + threadNumber + " завершил работу");
+    }
+}
