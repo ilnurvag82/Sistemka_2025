@@ -1,0 +1,87 @@
+public class RabbitAndTurtle {
+    public static final int FINISH = 300; // дистанция в метрах
+
+    public static void main(String[] args) throws InterruptedException {
+        // Создаём два потока: заяц и черепаха
+        AnimalThread rabbit = new AnimalThread("Rabbit", Thread.NORM_PRIORITY + 2);
+        AnimalThread turtle = new AnimalThread("Turtle", Thread.NORM_PRIORITY - 2);
+
+        rabbit.start();
+        turtle.start();
+
+        // Мониторим прогресс и динамически меняем приоритеты
+        while (rabbit.isAlive() || turtle.isAlive()) {
+            System.out.printf("Status -> %s: %d m (prio %d), %s: %d m (prio %d)%n",
+                    rabbit.getName(), rabbit.getMeters(), rabbit.getPriority(),
+                    turtle.getName(), turtle.getMeters(), turtle.getPriority());
+
+            // Если черепаха отстаёт более чем на 20 м — повышаем ей приоритет и понижаем зайцу
+            if (turtle.getMeters() + 20 < rabbit.getMeters() && turtle.getPriority() < Thread.MAX_PRIORITY) {
+                System.out.println("Adjusting priorities: help Turtle to catch up...");
+                turtle.setPriority(Thread.MAX_PRIORITY);
+                rabbit.setPriority(Thread.MIN_PRIORITY);
+            }
+
+            // Если черепаха перегнала — восстанавливаем обычные приоритеты
+            if (turtle.getMeters() > rabbit.getMeters()
+                    && (rabbit.getPriority() != Thread.NORM_PRIORITY || turtle.getPriority() != Thread.NORM_PRIORITY)) {
+                System.out.println("Turtle is ahead — restoring normal priorities.");
+                rabbit.setPriority(Thread.NORM_PRIORITY);
+                turtle.setPriority(Thread.NORM_PRIORITY);
+            }
+
+            // Небольшая пауза мониторинга
+            Thread.sleep(500);
+
+            // Если кто-то добежал до финиша — даём ему завершиться
+            if (rabbit.getMeters() >= FINISH && turtle.getMeters() >= FINISH) break;
+        }
+
+        // Останавливаем потоки (на всякий случай) и ждём их завершения
+        rabbit.interrupt();
+        turtle.interrupt();
+        rabbit.join();
+        turtle.join();
+
+        System.out.printf("Finish -> %s: %d m, %s: %d m%n",
+                rabbit.getName(), rabbit.getMeters(), turtle.getName(), turtle.getMeters());
+
+        if (rabbit.getMeters() > turtle.getMeters()) {
+            System.out.println("Winner: " + rabbit.getName());
+        } else if (turtle.getMeters() > rabbit.getMeters()) {
+            System.out.println("Winner: " + turtle.getName());
+        } else {
+            System.out.println("Draw");
+        }
+    }
+}
+
+class AnimalThread extends Thread {
+    private volatile int meters = 0;
+
+    public AnimalThread(String name, int priority) {
+        super(name);
+        setPriority(priority);
+    }
+
+    public int getMeters() {
+        return meters;
+    }
+
+    @Override
+    public void run() {
+        // Простая модель движения: каждый шаг +1 метр, пауза зависит от приоритета
+        while (!isInterrupted() && meters < RabbitAndTurtle.FINISH) {
+            meters++;
+
+            try {
+                // Чем выше приоритет — тем меньше пауза между шагами
+                int sleepMillis = Math.max(0, (Thread.MAX_PRIORITY - getPriority()) * 2);
+                Thread.sleep(sleepMillis);
+            } catch (InterruptedException e) {
+                // корректный выход при прерывании
+                break;
+            }
+        }
+    }
+}
