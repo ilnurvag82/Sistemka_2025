@@ -1,0 +1,33 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Введите количество денег: ");
+        int money = scan.nextInt();
+        System.out.println("Введите цену за одну шоколадку: ");
+        int price = scan.nextInt();
+        System.out.println("Введите количество обёрток для обмена: ");
+        int wrap = scan.nextInt();
+
+        if (money < 0 || price <= 0 || wrap <= 1) {
+            System.out.println("Неверные входные данные. Требования: money >= 0, price > 0, wrap > 1."); // 9
+            scan.close();
+            return;// 10
+        }
+
+        int chocolates = money / price; // сколько шоколадок можно купить на имеющиеся деньги
+        int total = chocolates; // общий счётчик всех полученных шоколадок
+        int wrappers = chocolates;
+
+        while (wrappers >= wrap) {
+            int exchange = wrappers / wrap; // сколько новых шоколадок можно получить на этом шаге обмена
+            total += exchange; 
+            wrappers = wrappers % wrap + exchange; // остаются остаток обёрток от текущего обмен
+        }
+
+        System.out.println("Максимальное количество шоколадок: " + total);
+        scan.close();
+    }
+}
