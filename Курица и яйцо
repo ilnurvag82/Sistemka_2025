@@ -1,0 +1,86 @@
+public class ChickenEggDebate {
+    private static String lastWord = "";
+    private static final Object lock = new Object();
+    
+    public static void main(String[] args) {
+        // Создаем потоки для курицы и яйца
+        Thread chickenThread = new Thread(new ChickenRunnable(), "Chicken");
+        Thread eggThread = new Thread(new EggRunnable(), "Egg");
+        
+        System.out.println("Начинается спор: что появилось сначала?");
+        System.out.println("========================================");
+        
+        // Запускаем потоки
+        chickenThread.start();
+        eggThread.start();
+        
+        try {
+            // Ждем завершения обоих потоков с помощью join()
+            chickenThread.join();
+            eggThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        // Проверяем состояние потоков с помощью isAlive()
+        boolean chickenAlive = chickenThread.isAlive();
+        boolean eggAlive = eggThread.isAlive();
+        
+        System.out.println("========================================");
+        System.out.println("Результаты спора:");
+        System.out.println("Поток Курица активен: " + chickenAlive);
+        System.out.println("Поток Яйцо активен: " + eggAlive);
+        
+        // Определяем победителя спора
+        if (!chickenAlive && !eggAlive) {
+            System.out.println("\n⚡ ФИНАЛЬНЫЙ ВЕРДИКТ:");
+            if (lastWord.equals("Курица")) {
+                System.out.println("🏆 ПОБЕДИЛА КУРИЦА! Курица появилась первой!");
+            } else if (lastWord.equals("Яйцо")) {
+                System.out.println("🥚 ПОБЕДИЛО ЯЙЦО! Яйцо появилось первым!");
+            } else {
+                System.out.println("🤔 СПОР ОСТАЛСЯ НЕРЕШЕННЫМ!");
+            }
+        }
+    }
+    
+    // Поток для курицы
+    static class ChickenRunnable implements Runnable {
+        @Override
+        public void run() {
+            for (int i = 1; i <= 5; i++) {
+                synchronized (lock) {
+                    lastWord = "Курица";
+                    System.out.println(Thread.currentThread().getName() + " говорит: " + lastWord + " (" + i + ")");
+                }
+                try {
+                    // Имитируем паузу между высказываниями
+                    Thread.sleep(150);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("Поток " + Thread.currentThread().getName() + " завершил работу");
+        }
+    }
+    
+    // Поток для яйца
+    static class EggRunnable implements Runnable {
+        @Override
+        public void run() {
+            for (int i = 1; i <= 5; i++) {
+                synchronized (lock) {
+                    lastWord = "Яйцо";
+                    System.out.println(Thread.currentThread().getName() + " говорит: " + lastWord + " (" + i + ")");
+                }
+                try {
+                    // Имитируем паузу между высказываниями
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("Поток " + Thread.currentThread().getName() + " завершил работу");
+        }
+    }
+}
